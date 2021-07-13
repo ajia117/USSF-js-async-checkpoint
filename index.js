@@ -1,14 +1,81 @@
 const fsPromises = require('fs/promises');
 const fetch = require('node-fetch');
 
-let args = process.argv // arguments
-main(args[2])
+
+let args = process.argv; // arguments
+main(args[2]);
 
 function main (fileName='./pokemon_names.txt') {
-  readPokemonNamesFile(fileName) //right now we have [ 'bulbasaur', 'charmander']
+  readPokemonNamesFile(fileName)
     .then((pokemonArray) => { return fetchAllPokemon(pokemonArray)})
     .then((pokemon) => { return printPokemon(pokemon)})
     .then((finalPrint) => {console.log(finalPrint)});
+}
+
+
+/*
+ * I/O (FILE and CONSOLE)
+ */
+
+/**
+ * returns a promise with an array of pokemon names read from the input file
+ * @param {*} file the file path to read from
+ * @returns Promise array of pokemon names
+ */
+function readPokemonNamesFile (file) {
+  return fsPromises.readFile(file, 'utf8')
+    .then((fileData) => { return fileData.split('\n') });
+}
+
+/**
+ * Takes in an array of objects including pokemon data
+ * and prints it correct
+ * @param {*} pokemon the array of pokemon objects
+ * @returns String Charizard: flying, fire
+ */
+function printPokemon (pokemon) {
+  return pokemon.map((pokemonRow) => {
+    if (pokemonRow) {
+      return `${pokemonRow.name}: ${pokemonRow.types.join(", ")}`;
+    }
+  }).join('\n');
+}
+
+
+/*
+ * POKE API calls with node-fetch
+ */
+
+/**
+ * Returns an individual promise with data from the poke api get request
+ *
+ * @param {*} name the name of the pokemon you want to fetch
+ * @returns Promise the response data from fetch
+ * @throws any invalid pokemon names will be caught here and resolves as null
+ */
+function fetchPokeAPI (name) {
+  return new Promise((resolve, reject) => {
+    let url = `https://pokeapi.co/api/v2/pokemon/${name}`;
+    fetch(url)
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw `invalid pokemon: ${name}`;
+        }
+      })
+      .then((response) => {
+        let types = response.types.map(typeSlot => {
+          return typeSlot.type.name;
+        });
+        resolve({name, types});
+
+      })
+      .catch((err) => {
+        console.error(err);
+        resolve(null);
+      });
+  })
 }
 
 /**
@@ -23,61 +90,6 @@ function fetchAllPokemon (pokemonArray) {
   }));
 }
 
-/**
- * returns a promise with an array of pokemon names read from the input file
- * @param {*} file the file path to read from
- * @returns Promise array of pokemon names
- */
-function readPokemonNamesFile (file) {
-  return fsPromises.readFile(file, 'utf8')
-    .then((fileData) => { return fileData.split('\n') })
-}
-
-/**
- * Returns an individual promise with data from the poke api get request
- *
- * @param {*} name the name of the pokemon you want to fetch
- * @returns Promise the response data from fetch
- * @throws any invalid pokemon names will be caught here and resolves as null
- */
-function fetchPokeAPI (name) {
-  return new Promise((resolve, reject) => {
-    let url = `https://pokeapi.co/api/v2/pokemon/${name}`
-    fetch(url)
-      .then((response) => {
-        if (response.ok) {
-          return response.json()
-        } else {
-          throw `invalid pokemon: ${name}`;
-        }
-      })
-      .then((response) => {
-        let types = response.types.map(typeSlot => {
-          return typeSlot.type.name
-        });
-        resolve({name, types});
-
-      })
-      .catch((err) => {
-        console.error(err)
-        resolve(null);
-      });
-  })
-}
-
-/**
- * Takes in an array of objects including pokemon data
- * and prints it correct
- * @param {*} pokemon the array of pokemon objects
- * @returns String Charizard: flying, fire
- */
-function printPokemon (pokemon) {
-  return pokemon.map((pokemonRow) => {
-    if (pokemonRow) {
-      return `${pokemonRow.name}: ${pokemonRow.types.join(", ")}`
-    }
-  }).join('\n');
-}
 
 //extra time
 //write test suite with mocha and chai
