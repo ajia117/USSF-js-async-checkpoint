@@ -7,7 +7,7 @@ let pokemonArray = fsPromises.readFile('./pokemon_names.txt', 'utf8')
   .then((fileData) => { return fileData.split('\n') }) //right now we have [ 'bulbasaur', 'charmander']
   .then((pokemonArray) => {
     Promise.all(pokemonArray.map((pokemon) => {
-      return pokemonPromise (pokemon)
+      return pokemonPromise (pokemon);
     }))
       .then((pokemonRowArray) => {
         return pokemonRowArray.map((pokemonRow) => {
@@ -40,13 +40,23 @@ function pokemonPromise (name) {
   return new Promise((resolve, reject) => {
     let url = `https://pokeapi.co/api/v2/pokemon/${name}`
     fetch(url)
-      .then((response) => {return response.json()})
+      .then((response) => {
+        if (response.ok) {
+          return response.json()
+        } else {
+          throw `invalid pokemon: ${name}`;
+        }
+      })
       .then((response) => {
         let types = response.types.map(typeSlot => {
           return typeSlot.type.name
         });
         resolve({name, types});
 
+      })
+      .catch((err) => {
+        console.error(err)
+        resolve(null);
       });
   })
 }
@@ -54,8 +64,9 @@ function pokemonPromise (name) {
 // Pikachu: electric
 // { name: 'bulbasaur', types: [ 'grass', 'poison' ] },
 function printPokemonRow (pokemonRow) {
-
-  return `${pokemonRow.name}: ${pokemonRow.types.join(", ")}`
+  if (pokemonRow) {
+    return `${pokemonRow.name}: ${pokemonRow.types.join(", ")}`
+  }
 }
 
 //let pokemonPromises = pokemonArray.map((name) => pokemonPromise(name));//okemonPromise("charizard").then((data) => console.log(data));
