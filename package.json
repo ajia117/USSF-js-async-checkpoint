@@ -1,0 +1,26 @@
+{
+  "name": "ussf-js-async-checkpoint",
+  "version": "1.0.0",
+  "description": "for class",
+  "main": "index.js",
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "dependencies": {
+    "node-fetch": "~2.6.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/efillman/USSF-js-async-checkpoint.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/efillman/USSF-js-async-checkpoint/issues"
+  },
+  "homepage": "https://github.com/efillman/USSF-js-async-checkpoint#readme"
+}
