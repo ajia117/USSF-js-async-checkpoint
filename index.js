@@ -5,11 +5,12 @@ const fetch = require('node-fetch');
 let args = process.argv; // arguments
 main(args[2]);
 
-function main (fileName='./pokemon_names.txt') {
+function main (fileName='pokemon_names.txt') {
   readPokemonNamesFile(fileName)
     .then((pokemonArray) => { return fetchAllPokemon(pokemonArray)})
     .then((pokemon) => { return printPokemon(pokemon)})
-    .then((finalPrint) => {console.log(finalPrint)});
+    .then((finalPrint) => {console.log(finalPrint)})
+    .catch((err) => {console.error(err)})
 }
 
 
@@ -24,7 +25,8 @@ function main (fileName='./pokemon_names.txt') {
  */
 function readPokemonNamesFile (file) {
   return fsPromises.readFile(file, 'utf8')
-    .then((fileData) => { return fileData.split('\n') });
+    .then((fileData) => { return fileData.split('\n') })
+    .catch((err) => {throw err});
 }
 
 /**
@@ -36,7 +38,7 @@ function readPokemonNamesFile (file) {
 function printPokemon (pokemon) {
   return pokemon.map((pokemonRow) => {
     if (pokemonRow) {
-      return `${pokemonRow.name}: ${pokemonRow.types.join(", ")}`;
+      return `${pokemonRow.name}: ${pokemonRow.types.join(', ')}`;
     }
   }).join('\n');
 }
@@ -55,26 +57,34 @@ function printPokemon (pokemon) {
  */
 function fetchPokeAPI (name) {
   return new Promise((resolve, reject) => {
-    let url = `https://pokeapi.co/api/v2/pokemon/${name}`;
-    fetch(url)
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw `invalid pokemon: ${name}`;
-        }
-      })
-      .then((response) => {
-        let types = response.types.map(typeSlot => {
-          return typeSlot.type.name;
-        });
-        resolve({name, types});
+    let url = '';
 
-      })
-      .catch((err) => {
-        console.error(err);
-        resolve(null);
-      });
+    // Check if name is empty string
+    if(name === '') {
+      resolve(null);
+    } else {
+      url = `https://pokeapi.co/api/v2/pokemon/${name}`;
+        fetch(url)
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw `invalid pokemon: ${name}`;
+            }
+          })
+          .then((response) => {
+            //console.log("name: " + name, response);
+            let types = response.types.map(typeSlot => {
+              return typeSlot.type.name;
+            });
+            resolve({name, types});
+
+          })
+          .catch((err) => {
+            console.error(err);
+            resolve(null);
+          });
+    }
   })
 }
 
@@ -86,16 +96,17 @@ function fetchPokeAPI (name) {
  */
 function fetchAllPokemon (pokemonArray) {
   return Promise.all(pokemonArray.map((pokemon) => {
-    return fetchPokeAPI (pokemon);
+    return fetchPokeAPI(pokemon);
   }));
 }
 
 
 //extra time
+// DONE: dynamically define input file
+// DONE: pre-check input names before making individual call
+//
 //write test suite with mocha and chai
-//rebuild using the node wrapper
-//dynamically define input file
-//pre-check input names before making individual call
+// rebuild using the node wrapper
 // node wrapped API: https://github.com/PokeAPI/pokedex-promise-v2
 
 // 1) Add error handling for "bad arguments" using .catch().
